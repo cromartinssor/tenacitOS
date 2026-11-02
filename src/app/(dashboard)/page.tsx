@@ -45,6 +45,7 @@ interface Agent {
 export default function DashboardPage() {
   const [stats, setStats] = useState<Stats>({ total: 0, today: 0, success: 0, error: 0, byType: {} });
   const [agents, setAgents] = useState<Agent[]>([]);
+  const [sheetData, setSheetData] = useState<any>(null);
 
   useEffect(() => {
     Promise.all([
@@ -61,6 +62,12 @@ export default function DashboardPage() {
       setAgents(agentsData.agents || []);
     }).catch(console.error);
   }, []);
+useEffect(() => {
+  fetch("/api/sheets")
+    .then((r) => r.json())
+    .then((data) => setSheetData(data))
+    .catch(console.error);
+}, []);
 
   return (
     <div className="p-4 md:p-8">
@@ -118,6 +125,20 @@ export default function DashboardPage() {
       </div>
 
       {/* Multi-Agent Status */}
+      {sheetData?.data && (
+  <div className="mb-6 rounded-xl p-5" style={{ backgroundColor: "var(--card)", border: "1px solid var(--border)" }}>
+    <h2 className="text-base font-semibold mb-3">Dados da planilha</h2>
+    <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
+      Última leitura: {sheetData.updated_at}
+    </p>
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-4">
+      <div><b>Health Checks</b><br />{sheetData.data["Health Checks"]?.length - 1 || 0} registros</div>
+      <div><b>Cron Jobs</b><br />{sheetData.data["Cron Jobs"]?.length - 1 || 0} registros</div>
+      <div><b>Tasks</b><br />{sheetData.data.Tasks?.length - 1 || 0} registros</div>
+    </div>
+  </div>
+)}
+
       <div 
         className="mb-6 rounded-xl overflow-hidden"
         style={{
